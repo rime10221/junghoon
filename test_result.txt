@@ -1,0 +1,196 @@
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\U0001f4c2' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 87, in main
+    logger.info("\U0001f4c2 Excel 파일 파싱 시작...")
+Message: '\U0001f4c2 Excel 파일 파싱 시작...'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2705' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 91, in main
+    logger.info(f"\u2705 {len(raw_order_data)}개 주문 데이터 로드 완료")
+Message: '\u2705 39개 주문 데이터 로드 완료'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\U0001f310' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 94, in main
+    logger.info("\U0001f310 주소를 좌표로 변환 중...")
+Message: '\U0001f310 주소를 좌표로 변환 중...'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\U0001f310' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 96, in main
+    geocoded_data = geocoder.geocode_addresses(raw_order_data)
+  File "C:\junghoon\src\geocoder.py", line 53, in geocode_addresses
+    self.logger.info(f"\U0001f310 총 {total_count}개 주소 지오코딩 시작...")
+Message: '\U0001f310 총 39개 주소 지오코딩 시작...'
+Arguments: ()
+2025-09-15 01:27:30 - route_optimizer - INFO - 진행률: 39/39 (100.0%)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2705' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 96, in main
+    geocoded_data = geocoder.geocode_addresses(raw_order_data)
+  File "C:\junghoon\src\geocoder.py", line 108, in geocode_addresses
+    self.logger.info(f"\u2705 지오코딩 완료: 성공 {success_count}/{total_count} ({success_count/total_count*100:.1f}%)")
+Message: '\u2705 지오코딩 완료: 성공 39/39 (100.0%)'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2705' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 97, in main
+    logger.info(f"\u2705 {len(geocoded_data)}개 주소 좌표 변환 완료")
+Message: '\u2705 39개 주소 좌표 변환 완료'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\U0001f697' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 107, in main
+    logger.info("\U0001f697 경로 최적화 실행...")
+Message: '\U0001f697 경로 최적화 실행...'
+Arguments: ()
+2025-09-15 01:27:31 - route_optimizer - INFO - 총 39개 경유지 중 39개 유효
+2025-09-15 01:27:31 - route_optimizer - INFO - 다중 클러스터 모드: 39개 → 전역 경로 연결 최적화
+2025-09-15 01:27:31 - route_optimizer - INFO - 대표점 12개 선택 (전체 39개 중)
+2025-09-15 01:27:31 - route_optimizer - INFO - 전역 시작-끝점 거리: 197m
+2025-09-15 01:27:31 - route_optimizer - INFO - 전역 최적화: 총 2개 배치로 분할
+2025-09-15 01:27:31 - route_optimizer - INFO - 배치 0: 출발지 1개, 경유지 20개, 목적지 1개
+2025-09-15 01:27:31 - route_optimizer - INFO - 경로 탐색 성공: 31.3km, 110.3분
+2025-09-15 01:27:31 - route_optimizer - INFO - 배치 1: 출발지 1개, 경유지 15개, 목적지 1개
+2025-09-15 01:27:31 - route_optimizer - INFO - 경로 탐색 성공: 20.4km, 76.8분
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\u2705' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 110, in main
+    logger.info("\u2705 경로 최적화 완료")
+Message: '\u2705 경로 최적화 완료'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp949' codec can't encode character '\U0001f4ca' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\junghoon\main.py", line 176, in <module>
+    main()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1078, in main
+    rv = self.invoke(ctx)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\click\core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\junghoon\main.py", line 117, in main
+    logger.info("\U0001f4ca 결과 파일 생성...")
+Message: '\U0001f4ca 결과 파일 생성...'
+Arguments: ()
+2025-09-15 01:27:31 - route_optimizer - ERROR - 처리 중 오류 발생: 'cp949' codec can't encode character '\U0001f389' in position 0: illegal multibyte sequence
+\u274c 오류: 'cp949' codec can't encode character '\U0001f389' in position 0: illegal multibyte sequence

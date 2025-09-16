@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Optimizer - 배송 경로 최적화</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        @font-face {
+            font-family: 'Malgun Gothic';
+            src: local('Malgun Gothic'), local('맑은 고딕');
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚚 배송 경로 최적화</h1>
+            <p>Excel 파일을 일괄 처리하여 최적화된 배송 경로를 생성합니다</p>
+        </header>
+
+        <main class="main-layout">
+            <!-- 왼쪽: 설정 및 상태 패널 -->
+            <div class="left-panel">
+                <!-- 설정 패널 -->
+                <section class="config-panel">
+                    <div class="folder-selection">
+                        <div class="folder-item">
+                            <label>📁 입력 폴더 (Excel 파일들)</label>
+                            <div class="folder-input">
+                                <input type="text" id="inputFolder" placeholder="Excel 파일이 있는 폴더를 선택하세요" readonly>
+                                <button id="selectInputFolder" class="btn btn-primary">폴더 선택</button>
+                            </div>
+                            <div id="inputFiles" class="file-list"></div>
+                        </div>
+
+                        <div class="folder-item">
+                            <label>📤 출력 폴더 (결과 파일들)</label>
+                            <div class="folder-input">
+                                <input type="text" id="outputFolder" placeholder="결과 파일을 저장할 폴더를 선택하세요" readonly>
+                                <button id="selectOutputFolder" class="btn btn-primary">폴더 선택</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings">
+                        <div class="setting-item">
+                            <label for="apiKey">🔑 카카오 API 키</label>
+                            <div class="api-key-input">
+                                <input type="password" id="apiKey" placeholder="카카오 모빌리티 API 키를 입력하세요">
+                                <button id="toggleApiKey" class="btn btn-small">👁️</button>
+                            </div>
+                            <small class="api-key-help">
+                                환경변수 또는 .env 파일에 설정된 키가 기본값으로 사용됩니다
+                            </small>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="priority">🎯 최적화 우선순위</label>
+                            <select id="priority">
+                                <option value="TIME">시간 우선 (기본)</option>
+                                <option value="DISTANCE">거리 우선</option>
+                                <option value="RECOMMEND">추천 (균형)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button id="startProcessing" class="btn btn-success" disabled>
+                            🚀 배치 처리 시작
+                        </button>
+                        <button id="stopProcessing" class="btn btn-danger" disabled>
+                            ⏹️ 처리 중단
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 진행 상태 패널 -->
+                <section class="status-panel">
+                    <div class="status-header">
+                        <h3>📊 처리 상태</h3>
+                        <div id="statusIndicator" class="status-indicator status-ready">준비</div>
+                    </div>
+
+                    <div class="progress-info">
+                        <div id="currentFile" class="current-file"></div>
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                        <div id="progressText" class="progress-text">0%</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 오른쪽: 로그 패널 -->
+            <div class="right-panel">
+                <section class="log-panel">
+                    <div class="log-header">
+                        <h3>📋 처리 로그</h3>
+                        <button id="clearLog" class="btn btn-small">로그 지우기</button>
+                    </div>
+                    <div id="logContainer" class="log-container">
+                        <div class="log-entry info">
+                            <span class="timestamp">[시작]</span>
+                            <span class="message">입력 폴더와 출력 폴더를 선택한 후 배치 처리를 시작하세요.</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

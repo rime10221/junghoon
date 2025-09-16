@@ -1,0 +1,88 @@
+{
+  "name": "route-optimizer-gui",
+  "version": "1.0.0",
+  "description": "경로 최적화 프로그램 GUI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never",
+    "pack": "electron-builder --dir",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["route", "optimization", "delivery", "logistics"],
+  "author": "Route Optimizer Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "dependencies": {
+    "electron-log": "^4.4.8"
+  },
+  "build": {
+    "appId": "com.routeoptimizer.app",
+    "productName": "경로 최적화 프로그램",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "extraFiles": [
+      {
+        "from": "../src",
+        "to": "src",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../main.py",
+        "to": "main.py"
+      },
+      {
+        "from": "../requirements.txt",
+        "to": "requirements.txt"
+      },
+      {
+        "from": "../.env",
+        "to": ".env"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "경로 최적화 프로그램"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}

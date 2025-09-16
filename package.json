@@ -1,0 +1,64 @@
+{
+  "name": "route-optimizer-gui",
+  "version": "1.0.0",
+  "description": "배송 경로 최적화 GUI 애플리케이션",
+  "main": "gui/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.routeoptimizer.app",
+    "productName": "Route Optimizer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "gui/**/*",
+      "src/**/*",
+      "main.py",
+      "requirements.txt",
+      "*.env",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "gui/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Route Optimizer"
+    },
+    "extraResources": [
+      {
+        "from": "src",
+        "to": "src"
+      },
+      {
+        "from": "main.py",
+        "to": "main.py"
+      },
+      {
+        "from": "requirements.txt",
+        "to": "requirements.txt"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^22.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "electron-log": "^4.4.8",
+    "electron-store": "^8.1.0"
+  },
+  "author": "Route Optimizer Team",
+  "license": "MIT"
+}
