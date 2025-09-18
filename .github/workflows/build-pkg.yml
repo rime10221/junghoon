@@ -1,0 +1,169 @@
+name: Build PKG
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+        - release
+        - debug
+
+jobs:
+  build:
+    runs-on: macos-12  # 구체적 macOS 버전 지정
+    timeout-minutes: 30
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11.8'  # 구체적 버전 지정
+        cache: 'pip'
+
+    - name: 📦 Install System Dependencies
+      run: |
+        echo "=== System Info ==="
+        uname -a
+        sw_vers
+        which python3
+        python3 --version
+
+        echo "=== Install Dependencies ==="
+        python3 -m pip install --upgrade pip wheel setuptools
+
+        # 최소한의 필수 패키지만 설치
+        pip install PyQt6==6.6.1
+        pip install requests pandas openpyxl python-dotenv click
+
+    - name: 🔍 Verify Files
+      run: |
+        echo "=== File Verification ==="
+        pwd
+        ls -la
+
+        echo "=== Required Files Check ==="
+        test -f gui_perfect.py && echo "✅ gui_perfect.py exists" || echo "❌ gui_perfect.py missing"
+        test -f main.py && echo "✅ main.py exists" || echo "❌ main.py missing"
+        test -f .env && echo "✅ .env exists" || echo "❌ .env missing"
+        test -d src && echo "✅ src/ exists" || echo "❌ src/ missing"
+
+    - name: 🧪 Test Python Imports
+      run: |
+        echo "=== Import Tests ==="
+        python3 -c "import sys; print(f'Python: {sys.version}')"
+        python3 -c "import PyQt6; print('✅ PyQt6 OK')"
+        python3 -c "import pandas; print('✅ pandas OK')"
+        python3 -c "import requests; print('✅ requests OK')"
+
+    - name: 🏗️ Create App Bundle
+      run: |
+        echo "=== Creating App Bundle ==="
+        APP_NAME="CARRY Route Optimizer.app"
+
+        # Clean previous builds
+        rm -rf "$APP_NAME" *.pkg pkg_*
+
+        # Create app bundle structure
+        mkdir -p "$APP_NAME/Contents/MacOS"
+        mkdir -p "$APP_NAME/Contents/Resources"
+
+        # Create Info.plist
+        cat > "$APP_NAME/Contents/Info.plist" << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>run_app</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.carry.routeoptimizer</string>
+            <key>CFBundleName</key>
+            <string>CARRY Route Optimizer</string>
+            <key>CFBundleVersion</key>
+            <string>1.0.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.0</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+        </dict>
+        </plist>
+        EOF
+
+        # Create launcher script
+        cat > "$APP_NAME/Contents/MacOS/run_app" << 'EOF'
+        #!/bin/bash
+        DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../Resources" && pwd)"
+        cd "$DIR"
+        export PYTHONPATH="$DIR:$PYTHONPATH"
+        /usr/bin/python3 gui_perfect.py "$@"
+        EOF
+
+        chmod +x "$APP_NAME/Contents/MacOS/run_app"
+
+        # Copy resources
+        cp gui_perfect.py "$APP_NAME/Contents/Resources/"
+        cp main.py "$APP_NAME/Contents/Resources/"
+        cp .env "$APP_NAME/Contents/Resources/"
+        cp -r src "$APP_NAME/Contents/Resources/"
+
+        echo "✅ App bundle created successfully"
+        find "$APP_NAME" -type f | head -10
+
+    - name: 📦 Create PKG Installer
+      run: |
+        echo "=== Creating PKG Installer ==="
+        APP_NAME="CARRY Route Optimizer.app"
+        PKG_NAME="CARRY-Route-Optimizer-v1.0.0.pkg"
+
+        # Verify app bundle exists
+        if [[ ! -d "$APP_NAME" ]]; then
+          echo "❌ App bundle not found"
+          exit 1
+        fi
+
+        # Create package structure
+        mkdir -p pkg_payload/Applications
+        cp -R "$APP_NAME" pkg_payload/Applications/
+
+        # Build the package
+        pkgbuild \
+          --root pkg_payload \
+          --identifier com.carry.routeoptimizer.installer \
+          --version 1.0.0 \
+          --install-location / \
+          "$PKG_NAME"
+
+        # Verify PKG creation
+        if [[ -f "$PKG_NAME" ]]; then
+          echo "✅ PKG created successfully: $PKG_NAME"
+          ls -la "$PKG_NAME"
+          echo "Size: $(du -sh "$PKG_NAME" | cut -f1)"
+        else
+          echo "❌ PKG creation failed"
+          exit 1
+        fi
+
+    - name: 🎯 Upload PKG Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CARRY-Route-Optimizer-PKG
+        path: "*.pkg"
+        retention-days: 30
+
+    - name: ✅ Build Summary
+      run: |
+        echo "🎉 BUILD COMPLETED SUCCESSFULLY!"
+        echo "=================================="
+        echo "App Bundle: $(ls -d *.app 2>/dev/null || echo 'Not found')"
+        echo "PKG File: $(ls *.pkg 2>/dev/null || echo 'Not found')"
+        echo "Build Time: $(date)"
+        echo "Artifacts uploaded to GitHub Actions"
