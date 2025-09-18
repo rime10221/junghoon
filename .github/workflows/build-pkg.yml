@@ -11,6 +11,9 @@ on:
         options:
         - release
         - debug
+  push:
+    tags:
+      - 'pkg-v*'
 
 jobs:
   build:
@@ -29,7 +32,7 @@ jobs:
         python-version: '3.11.8'  # 구체적 버전 지정
         cache: 'pip'
 
-    - name: 📦 Install System Dependencies
+    - name: 📦 Install All Dependencies
       run: |
         echo "=== System Info ==="
         uname -a
@@ -40,9 +43,11 @@ jobs:
         echo "=== Install Dependencies ==="
         python3 -m pip install --upgrade pip wheel setuptools
 
-        # 최소한의 필수 패키지만 설치
-        pip install PyQt6==6.6.1
-        pip install requests pandas openpyxl python-dotenv click
+        # requirements.txt의 모든 의존성 설치
+        pip install -r requirements.txt
+
+        # macOS GUI 패키지 추가 설치
+        pip install PyQt6
 
     - name: 🔍 Verify Files
       run: |
@@ -56,13 +61,19 @@ jobs:
         test -f .env && echo "✅ .env exists" || echo "❌ .env missing"
         test -d src && echo "✅ src/ exists" || echo "❌ src/ missing"
 
-    - name: 🧪 Test Python Imports
+    - name: 🧪 Test All Python Imports
       run: |
         echo "=== Import Tests ==="
         python3 -c "import sys; print(f'Python: {sys.version}')"
         python3 -c "import PyQt6; print('✅ PyQt6 OK')"
         python3 -c "import pandas; print('✅ pandas OK')"
         python3 -c "import requests; print('✅ requests OK')"
+        python3 -c "import numpy; print('✅ numpy OK')"
+        python3 -c "import sklearn; print('✅ scikit-learn OK')"
+        python3 -c "import openpyxl; print('✅ openpyxl OK')"
+        python3 -c "import click; print('✅ click OK')"
+        python3 -c "import folium; print('✅ folium OK')"
+        python3 -c "from dotenv import load_dotenv; print('✅ python-dotenv OK')"
 
     - name: 🏗️ Create App Bundle
       run: |
