@@ -1,0 +1,54 @@
+name: Build macOS PKG Installer
+
+on:
+  workflow_dispatch:  # 수동 실행
+  push:
+    tags:
+      - 'v*'  # 태그 푸시 시 자동 실행
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install py2app PyQt6
+
+    - name: Create .env file
+      run: |
+        echo "KAKAO_API_KEY=your_api_key_here" > .env
+        echo "# Replace with actual API key before building" >> .env
+
+    - name: Make scripts executable
+      run: |
+        chmod +x build_mac_app.sh
+        chmod +x build_pkg_installer.sh
+
+    - name: Build .pkg installer
+      run: ./build_pkg_installer.sh
+
+    - name: Upload PKG as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: CARRY-Route-Optimizer-PKG
+        path: "*.pkg"
+
+    - name: Create Release (if tag)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "*.pkg"
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
