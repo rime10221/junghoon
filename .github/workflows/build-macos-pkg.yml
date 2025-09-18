@@ -39,7 +39,7 @@ jobs:
       run: ./build_pkg_installer.sh
 
     - name: Upload PKG as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: CARRY-Route-Optimizer-PKG
         path: "*.pkg"
