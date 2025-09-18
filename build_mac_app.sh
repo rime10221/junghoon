@@ -44,17 +44,12 @@ pip install PyQt6
 
 # .env 파일 확인
 if [[ ! -f ".env" ]]; then
-    if [[ -f ".env.example" ]]; then
-        echo "⚠️ .env 파일이 없습니다. .env.example을 복사하여 API 키를 설정하세요."
-        cp .env.example .env
-        echo "📝 .env 파일이 생성되었습니다. API 키를 설정 후 다시 실행하세요."
-        echo "   편집: nano .env"
-        exit 1
-    else
-        echo "❌ 오류: .env 또는 .env.example 파일이 필요합니다."
-        exit 1
-    fi
+    echo "❌ 오류: .env 파일이 필요합니다."
+    echo "💡 GitHub에 .env 파일이 올라가 있는지 확인하세요."
+    exit 1
 fi
+
+echo "📝 .env 파일 확인됨"
 
 # 이전 빌드 정리
 echo "🧹 이전 빌드 파일 정리..."
@@ -90,9 +85,13 @@ if [[ -d "dist/gui_perfect.app" ]]; then
     echo ""
     echo "📦 배포용 DMG 생성을 원하시면 'create_dmg.sh'를 실행하세요."
 
-    # 실행 가능 여부 테스트
-    echo "🧪 앱 실행 테스트..."
-    open "dist/CARRY Route Optimizer.app" --args --test
+    # 실행 가능 여부 테스트 (GitHub Actions에서는 스킵)
+    if [[ -z "$GITHUB_ACTIONS" ]]; then
+        echo "🧪 앱 실행 테스트..."
+        open "dist/CARRY Route Optimizer.app" --args --test
+    else
+        echo "🧪 GitHub Actions 환경에서는 실행 테스트를 스킵합니다."
+    fi
 
 else
     echo "❌ .app 번들 생성 실패"

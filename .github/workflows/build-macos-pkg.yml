@@ -25,11 +25,6 @@ jobs:
         pip install -r requirements.txt
         pip install py2app PyQt6
 
-    - name: Create .env file
-      run: |
-        echo "KAKAO_API_KEY=your_api_key_here" > .env
-        echo "# Replace with actual API key before building" >> .env
-
     - name: Make scripts executable
       run: |
         chmod +x build_mac_app.sh
