@@ -1,0 +1,117 @@
+name: Simple macOS App Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'simple-v*'
+
+jobs:
+  build-simple:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install basic dependencies only
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install PyQt6 requests pandas openpyxl python-dotenv click
+
+    - name: Check files exist
+      run: |
+        echo "=== 파일 확인 ==="
+        ls -la
+        echo "=== gui_perfect.py 확인 ==="
+        head -5 gui_perfect.py || echo "gui_perfect.py 없음"
+        echo "=== .env 확인 ==="
+        cat .env || echo ".env 없음"
+
+    - name: Simple Python script check
+      run: |
+        echo "=== Python import 테스트 ==="
+        python -c "import sys; print('Python:', sys.version)"
+        python -c "import PyQt6; print('PyQt6: OK')" || echo "PyQt6 실패"
+        python -c "import pandas; print('Pandas: OK')" || echo "Pandas 실패"
+
+    - name: Create basic app bundle manually
+      run: |
+        echo "=== 수동 앱 번들 생성 ==="
+        mkdir -p "CARRY Route Optimizer.app/Contents/MacOS"
+        mkdir -p "CARRY Route Optimizer.app/Contents/Resources"
+
+        # Info.plist 생성
+        cat > "CARRY Route Optimizer.app/Contents/Info.plist" << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>CARRY Route Optimizer</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.carry.routeoptimizer</string>
+            <key>CFBundleName</key>
+            <string>CARRY Route Optimizer</string>
+            <key>CFBundleVersion</key>
+            <string>1.0.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.0</string>
+        </dict>
+        </plist>
+        EOF
+
+        # 실행 파일 생성
+        cat > "CARRY Route Optimizer.app/Contents/MacOS/CARRY Route Optimizer" << 'EOF'
+        #!/bin/bash
+        cd "$(dirname "$0")/../Resources"
+        python3 gui_perfect.py
+        EOF
+
+        chmod +x "CARRY Route Optimizer.app/Contents/MacOS/CARRY Route Optimizer"
+
+        # 리소스 복사
+        cp gui_perfect.py "CARRY Route Optimizer.app/Contents/Resources/"
+        cp main.py "CARRY Route Optimizer.app/Contents/Resources/"
+        cp .env "CARRY Route Optimizer.app/Contents/Resources/"
+        cp -r src "CARRY Route Optimizer.app/Contents/Resources/" || true
+
+        echo "✅ 기본 앱 번들 생성 완료"
+
+    - name: Create simple PKG
+      run: |
+        echo "=== 간단한 PKG 생성 ==="
+        mkdir -p pkg_root/Applications
+        cp -R "CARRY Route Optimizer.app" pkg_root/Applications/
+
+        pkgbuild \
+          --root pkg_root \
+          --identifier com.carry.routeoptimizer.simple \
+          --version 1.0.0 \
+          --install-location / \
+          CARRY-Route-Optimizer-Simple.pkg
+
+        echo "✅ PKG 파일 생성 완료"
+        ls -la *.pkg
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: CARRY-Route-Optimizer-Simple
+        path: |
+          *.pkg
+          CARRY Route Optimizer.app
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/simple-v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "*.pkg"
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
