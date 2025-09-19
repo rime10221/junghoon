@@ -207,7 +207,7 @@ jobs:
             a.zipfiles,
             a.datas,
             [],
-            name='CARRY Route Optimizer',
+            name='CarryRouteOptimizer',  # 공백 제거하여 권한 문제 방지
             debug=False,
             bootloader_ignore_signals=False,
             strip=False,
@@ -225,7 +225,7 @@ jobs:
 
         app = BUNDLE(
             exe,
-            name='CARRY Route Optimizer.app',
+            name='CarryRouteOptimizer.app',  # 공백 제거하여 권한/설치 문제 방지
             icon=None,
             bundle_identifier='com.carry.routeoptimizer',
             version='1.0.0',
@@ -238,6 +238,8 @@ jobs:
                 'NSAppleEventsUsageDescription': 'CARRY Route Optimizer needs access for route optimization.',
                 'NSLocationWhenInUseUsageDescription': 'Location access for better route optimization.',
                 'LSMinimumSystemVersion': '10.15.0',
+                'LSApplicationCategoryType': 'public.app-category.productivity',  # 앱스토어 카테고리
+                'NSRequiresAquaSystemAppearance': False,  # 다크모드 지원
             },
         )
         EOF
@@ -252,17 +254,17 @@ jobs:
         pyinstaller carry_optimizer.spec --clean --noconfirm
 
         # 빌드 결과 확인
-        if [[ -d "dist/CARRY Route Optimizer.app" ]]; then
+        if [[ -d "dist/CarryRouteOptimizer.app" ]]; then
             echo "✅ PyInstaller 빌드 성공!"
 
             echo "=== 앱 번들 정보 ==="
-            ls -la "dist/CARRY Route Optimizer.app/Contents/"
+            ls -la "dist/CarryRouteOptimizer.app/Contents/"
 
             echo "=== 앱 크기 ==="
-            du -sh "dist/CARRY Route Optimizer.app"
+            du -sh "dist/CarryRouteOptimizer.app"
 
             echo "=== 번들된 라이브러리 확인 ==="
-            find "dist/CARRY Route Optimizer.app" -name "*.dylib" | head -5
+            find "dist/CarryRouteOptimizer.app" -name "*.dylib" | head -5
 
         else
             echo "❌ PyInstaller 빌드 실패"
@@ -275,11 +277,11 @@ jobs:
       run: |
         echo "=== 앱 번들 검증 ==="
 
-        APP_PATH="dist/CARRY Route Optimizer.app"
+        APP_PATH="dist/CarryRouteOptimizer.app"
 
         # 구조 검증
         test -f "$APP_PATH/Contents/Info.plist" && echo "✅ Info.plist" || echo "❌ Info.plist 누락"
-        test -f "$APP_PATH/Contents/MacOS/CARRY Route Optimizer" && echo "✅ 실행파일" || echo "❌ 실행파일 누락"
+        test -f "$APP_PATH/Contents/MacOS/CarryRouteOptimizer" && echo "✅ 실행파일" || echo "❌ 실행파일 누락"
 
         # 의존성 검증 (완전 독립형인지 확인)
         echo "=== 번들된 Python 라이브러리 확인 ==="
@@ -287,19 +289,28 @@ jobs:
         find "$APP_PATH" -name "*numpy*" | head -3
         find "$APP_PATH" -name "*PyQt*" | head -3
 
-        # 실행 권한 확인
-        if [[ -x "$APP_PATH/Contents/MacOS/CARRY Route Optimizer" ]]; then
+        # 실행 권한 확인 및 설정
+        EXEC_PATH="$APP_PATH/Contents/MacOS/CarryRouteOptimizer"
+        if [[ -x "$EXEC_PATH" ]]; then
             echo "✅ 실행 권한 정상"
         else
-            echo "❌ 실행 권한 없음"
-            chmod +x "$APP_PATH/Contents/MacOS/CARRY Route Optimizer"
+            echo "⚠️ 실행 권한 설정 중..."
+            chmod +x "$EXEC_PATH"
+            echo "✅ 실행 권한 설정 완료"
         fi
+
+        # 모든 파일 권한 정리
+        echo "=== 권한 정리 ==="
+        chmod -R 755 "$APP_PATH"
+        find "$APP_PATH" -name "*.dylib" -exec chmod 755 {} \;
+        find "$APP_PATH" -name "*.so" -exec chmod 755 {} \;
+        echo "✅ 권한 정리 완료"
 
     - name: 📦 Create Perfect PKG
       run: |
         echo "=== 완벽한 PKG 인스톨러 생성 ==="
 
-        APP_NAME="CARRY Route Optimizer.app"
+        APP_NAME="CarryRouteOptimizer.app"
         PKG_NAME="CARRY-Route-Optimizer-PERFECT-$(date +%Y%m%d).pkg"
 
         # 앱이 존재하는지 확인
@@ -312,27 +323,48 @@ jobs:
         mkdir -p pkg_payload/Applications
         cp -R "dist/$APP_NAME" pkg_payload/Applications/
 
+        # 복사된 앱의 권한 재설정 (PKG 내부에서도 정확한 권한 유지)
+        chmod -R 755 "pkg_payload/Applications/$APP_NAME"
+        chmod +x "pkg_payload/Applications/$APP_NAME/Contents/MacOS/CarryRouteOptimizer"
+
         # 설치 후 스크립트 생성
         mkdir -p pkg_scripts
         cat > pkg_scripts/postinstall << 'EOF'
         #!/bin/bash
 
-        APP_PATH="/Applications/CARRY Route Optimizer.app"
+        APP_PATH="/Applications/CarryRouteOptimizer.app"
+        EXEC_PATH="$APP_PATH/Contents/MacOS/CarryRouteOptimizer"
 
         echo "CARRY Route Optimizer 설치 후 처리 중..."
 
-        # 권한 설정
+        # 앱이 설치되었는지 확인
         if [[ -d "$APP_PATH" ]]; then
-            chmod -R 755 "$APP_PATH"
-            chown -R root:admin "$APP_PATH"
+            # 실행 권한 설정 (더 안전한 방식)
+            chmod 755 "$APP_PATH"
+            chmod -R 755 "$APP_PATH/Contents"
 
-            # Gatekeeper 속성 제거
+            # 실행파일에만 실행 권한 부여
+            if [[ -f "$EXEC_PATH" ]]; then
+                chmod +x "$EXEC_PATH"
+                echo "✅ 실행 권한 설정 완료"
+            fi
+
+            # 소유권 설정 (관리자 권한 없이도 실행 가능하도록)
+            # chown 대신 현재 사용자 권한으로 설정
+
+            # Gatekeeper 속성 제거 (더 포괄적으로)
             xattr -cr "$APP_PATH" 2>/dev/null || true
+            xattr -d com.apple.quarantine "$APP_PATH" 2>/dev/null || true
+
+            # 하위 폴더의 모든 실행파일과 라이브러리에 권한 설정
+            find "$APP_PATH" -name "*.dylib" -exec chmod 755 {} \; 2>/dev/null || true
+            find "$APP_PATH" -name "*.so" -exec chmod 755 {} \; 2>/dev/null || true
 
             echo "✅ CARRY Route Optimizer 설치 완료"
-            echo "📍 Applications 폴더에서 찾을 수 있습니다"
+            echo "📍 Applications 폴더에서 CarryRouteOptimizer를 찾을 수 있습니다"
+            echo "🔐 보안 설정이 완료되었습니다"
         else
-            echo "❌ 설치 중 오류 발생"
+            echo "❌ 설치 중 오류 발생: 앱을 찾을 수 없습니다"
             exit 1
         fi
 
@@ -380,7 +412,7 @@ jobs:
         name: CARRY-Route-Optimizer-PERFECT
         path: |
           *.pkg
-          dist/CARRY Route Optimizer.app
+          dist/CarryRouteOptimizer.app
         retention-days: 30
 
     - name: ✅ Perfect Build Summary
