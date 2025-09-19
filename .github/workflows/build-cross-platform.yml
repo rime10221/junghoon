@@ -1,0 +1,281 @@
+name: Cross-Platform Build (macOS Runner Alternative)
+
+# macOS runner 대기열 문제 해결을 위한 대안적 접근
+# Linux runner에서 macOS 호환 패키지 생성
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_type:
+        description: 'Package type to build'
+        required: true
+        default: 'app-bundle'
+        type: choice
+        options:
+        - app-bundle
+        - zip-package
+        - tarball
+  push:
+    branches: [ main ]
+    paths:
+    - '**.py'
+    - 'requirements.txt'
+
+jobs:
+  # Linux에서 macOS 호환 패키지 생성
+  build-cross-platform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # 매우 빠름
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: 📦 Install Dependencies
+      run: |
+        pip install -r requirements.txt
+        # macOS 호환성을 위한 추가 도구
+        pip install zipapp
+
+    - name: 🏗️ Create macOS App Bundle Structure
+      run: |
+        echo "🏗️ Creating macOS compatible app bundle..."
+
+        APP_NAME="CARRY Route Optimizer.app"
+        VERSION="1.0.0"
+
+        # macOS 앱 구조 생성
+        mkdir -p "$APP_NAME/Contents/"{MacOS,Resources,Frameworks}
+
+        # Info.plist 생성
+        cat > "$APP_NAME/Contents/Info.plist" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>CARRY_Route_Optimizer</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.carry.routeoptimizer</string>
+    <key>CFBundleName</key>
+    <string>CARRY Route Optimizer</string>
+    <key>CFBundleDisplayName</key>
+    <string>CARRY Route Optimizer</string>
+    <key>CFBundleVersion</key>
+    <string>$VERSION</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$VERSION</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.15</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>CARRY Route Optimizer needs access for route optimization features.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>CARRY Route Optimizer uses location for better route suggestions.</string>
+</dict>
+</plist>
+EOF
+
+        # 실행 가능한 런처 스크립트
+        cat > "$APP_NAME/Contents/MacOS/CARRY_Route_Optimizer" << 'EOF'
+#!/bin/bash
+# CARRY Route Optimizer - Cross-platform compatible launcher
+
+set -e
+
+echo "🚀 CARRY Route Optimizer Starting..."
+
+# 실행 디렉토리 확인
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RESOURCES_DIR="$SCRIPT_DIR/../Resources"
+
+if [[ ! -d "$RESOURCES_DIR" ]]; then
+    echo "❌ Resources directory not found: $RESOURCES_DIR"
+    exit 1
+fi
+
+cd "$RESOURCES_DIR"
+
+# Python 경로 설정
+export PYTHONPATH="$RESOURCES_DIR:$PYTHONPATH"
+
+# Python 실행 (여러 경로 시도)
+PYTHON_PATHS=(
+    "/usr/local/bin/python3"
+    "/opt/homebrew/bin/python3"
+    "/usr/bin/python3"
+    "python3"
+    "python"
+)
+
+for py_path in "${PYTHON_PATHS[@]}"; do
+    if command -v "$py_path" >/dev/null 2>&1; then
+        echo "✅ Using Python: $py_path"
+
+        # Python 버전 확인
+        py_version=$("$py_path" --version 2>&1)
+        echo "📍 Python version: $py_version"
+
+        # 필수 모듈 확인
+        if "$py_path" -c "import PyQt6" 2>/dev/null; then
+            echo "✅ PyQt6 available"
+        else
+            echo "⚠️ PyQt6 not found. Installing..."
+            "$py_path" -m pip install PyQt6 --user --quiet || {
+                echo "❌ Failed to install PyQt6. Please install manually:"
+                echo "   pip3 install PyQt6"
+                exit 1
+            }
+        fi
+
+        # 앱 실행
+        exec "$py_path" gui_perfect.py "$@"
+    fi
+done
+
+echo "❌ Python 3 not found. Please install Python 3.8+ from python.org"
+exit 1
+EOF
+
+        chmod +x "$APP_NAME/Contents/MacOS/CARRY_Route_Optimizer"
+
+        # Resources 복사
+        echo "📂 Copying resources..."
+        cp *.py "$APP_NAME/Contents/Resources/" 2>/dev/null || true
+        cp .env "$APP_NAME/Contents/Resources/" 2>/dev/null || true
+        [[ -d src ]] && cp -r src "$APP_NAME/Contents/Resources/" || true
+
+        # requirements.txt 포함 (런타임 의존성 설치용)
+        cp requirements.txt "$APP_NAME/Contents/Resources/" 2>/dev/null || true
+
+        echo "✅ App bundle structure created"
+        find "$APP_NAME" -type f | head -10
+
+    - name: 📦 Create Distribution Packages
+      run: |
+        echo "📦 Creating multiple distribution formats..."
+
+        APP_NAME="CARRY Route Optimizer.app"
+        TIMESTAMP=$(date +%Y%m%d-%H%M)
+
+        # 1. ZIP 패키지 (가장 호환성 좋음)
+        zip -r "CARRY-Route-Optimizer-macOS-${TIMESTAMP}.zip" "$APP_NAME"
+
+        # 2. TAR.GZ 패키지 (Unix 계열 선호)
+        tar -czf "CARRY-Route-Optimizer-macOS-${TIMESTAMP}.tar.gz" "$APP_NAME"
+
+        # 3. 설치 스크립트와 함께 패키지
+        cat > install_macos.sh << 'EOF'
+#!/bin/bash
+# CARRY Route Optimizer macOS 설치 스크립트
+
+set -e
+
+echo "🚀 CARRY Route Optimizer macOS 설치를 시작합니다..."
+
+# 관리자 권한 확인
+if [[ $EUID -eq 0 ]]; then
+   echo "⚠️ 이 스크립트는 root 권한으로 실행하지 마세요."
+   exit 1
+fi
+
+APP_NAME="CARRY Route Optimizer.app"
+INSTALL_DIR="/Applications"
+
+# Python 설치 확인
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "❌ Python 3이 설치되어 있지 않습니다."
+    echo "📥 Python 3.8 이상을 python.org에서 설치해주세요."
+    open "https://www.python.org/downloads/macos/"
+    exit 1
+fi
+
+echo "✅ Python 확인됨: $(python3 --version)"
+
+# 앱 설치
+if [[ -d "$APP_NAME" ]]; then
+    echo "📱 애플리케이션을 /Applications로 복사합니다..."
+
+    # 기존 앱 제거 (있다면)
+    if [[ -d "$INSTALL_DIR/$APP_NAME" ]]; then
+        echo "🗑️ 기존 애플리케이션 제거 중..."
+        rm -rf "$INSTALL_DIR/$APP_NAME"
+    fi
+
+    # 새 앱 복사
+    cp -R "$APP_NAME" "$INSTALL_DIR/"
+
+    echo "✅ 설치 완료!"
+    echo ""
+    echo "🎯 사용 방법:"
+    echo "1. Finder > Applications > CARRY Route Optimizer"
+    echo "2. 첫 실행시 '확인되지 않은 개발자' 경고가 나타나면:"
+    echo "   - 시스템 설정 > 개인정보 보호 및 보안 > 확인 없이 열기"
+    echo "   - 또는 앱을 우클릭 > 열기"
+    echo ""
+    echo "💡 필요한 Python 패키지가 자동으로 설치됩니다."
+
+else
+    echo "❌ $APP_NAME을 찾을 수 없습니다."
+    echo "압축을 해제했는지 확인해주세요."
+    exit 1
+fi
+EOF
+
+        chmod +x install_macos.sh
+
+        # 설치 스크립트와 함께 패키지
+        zip -r "CARRY-Route-Optimizer-macOS-WithInstaller-${TIMESTAMP}.zip" \
+            "$APP_NAME" install_macos.sh
+
+        echo "✅ 배포 패키지 생성 완료:"
+        ls -la *.zip *.tar.gz
+
+    - name: 🧪 Package Validation
+      run: |
+        echo "🧪 패키지 검증 중..."
+
+        # ZIP 패키지 검증
+        for file in *.zip; do
+            if [[ -f "$file" ]]; then
+                echo "📦 $file: $(du -sh "$file" | cut -f1)"
+                # ZIP 내용 간단 확인
+                unzip -l "$file" | head -5
+                echo "---"
+            fi
+        done
+
+    - name: 📤 Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: CARRY-Route-Optimizer-CrossPlatform
+        path: |
+          *.zip
+          *.tar.gz
+          install_macos.sh
+        retention-days: 30
+
+    - name: ✅ Build Complete
+      run: |
+        echo "🎉 크로스 플랫폼 빌드 완료!"
+        echo "================================"
+        echo ""
+        echo "📦 생성된 패키지:"
+        ls -la *.zip *.tar.gz 2>/dev/null || echo "패키지 없음"
+        echo ""
+        echo "💡 사용 방법:"
+        echo "1. Artifacts에서 패키지 다운로드"
+        echo "2. ZIP 파일 압축 해제"
+        echo "3. install_macos.sh 실행 또는"
+        echo "4. 앱을 직접 Applications 폴더로 드래그"
+        echo ""
+        echo "🚀 macOS runner 없이도 빌드 성공!"

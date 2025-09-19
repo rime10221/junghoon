@@ -1,0 +1,270 @@
+name: Build macOS PKG (Optimized)
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild without cache'
+        required: false
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*'
+      - 'pkg-v*'
+
+# GitHub Actions 최적화를 위한 동시 실행 제한
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 사전 검증 단계 (Linux에서 빠르게)
+  pre-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      should-build: ${{ steps.check.outputs.should-build }}
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🔍 Check Build Requirements
+      id: check
+      run: |
+        echo "=== Pre-validation ==="
+
+        # 필수 파일 확인
+        missing_files=()
+        required_files=("gui_perfect.py" "main.py" ".env" "src" "requirements.txt")
+
+        for file in "${required_files[@]}"; do
+          if [[ ! -e "$file" ]]; then
+            missing_files+=("$file")
+          fi
+        done
+
+        if [[ ${#missing_files[@]} -gt 0 ]]; then
+          echo "❌ Missing required files: ${missing_files[*]}"
+          echo "should-build=false" >> $GITHUB_OUTPUT
+          exit 1
+        else
+          echo "✅ All required files present"
+          echo "should-build=true" >> $GITHUB_OUTPUT
+        fi
+
+  # macOS PKG 빌드 (최적화된)
+  build-macos:
+    needs: pre-validate
+    if: needs.pre-validate.outputs.should-build == 'true'
+    runs-on: macos-13  # 최신 안정 버전
+    timeout-minutes: 40
+    env:
+      PYTHONUNBUFFERED: 1
+      PIP_DISABLE_PIP_VERSION_CHECK: 1
+      PIP_NO_WARN_SCRIPT_LOCATION: 1
+
+    steps:
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1  # shallow clone으로 속도 향상
+
+    - name: 🐍 Setup Python (Cached)
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11.8'
+        cache: 'pip'
+        cache-dependency-path: 'requirements.txt'
+
+    - name: ⚡ Install Dependencies (Fast)
+      run: |
+        echo "🚀 Fast dependency installation..."
+
+        # pip 업그레이드 (캐시됨)
+        python3 -m pip install --upgrade pip wheel setuptools --quiet
+
+        # 의존성 한번에 설치 (더 빠름)
+        pip install -r requirements.txt PyQt6 --quiet --no-warn-script-location
+
+        echo "✅ Dependencies installed successfully"
+
+    - name: 🧪 Quick Validation
+      run: |
+        echo "🔍 Quick import tests..."
+        python3 -c "import PyQt6; import pandas; import requests; print('✅ Core imports OK')"
+
+    - name: 🏗️ Build App Bundle (Optimized)
+      run: |
+        echo "🚀 Building optimized app bundle..."
+
+        APP_NAME="CARRY Route Optimizer.app"
+        VERSION="1.0.0"
+        BUILD_DATE=$(date +%Y%m%d-%H%M)
+
+        # 정리
+        rm -rf "$APP_NAME" *.pkg pkg_*
+
+        # 앱 구조 생성
+        mkdir -p "$APP_NAME/Contents/"{MacOS,Resources}
+
+        # 최적화된 Info.plist
+        cat > "$APP_NAME/Contents/Info.plist" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>run_app</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.carry.routeoptimizer</string>
+    <key>CFBundleName</key>
+    <string>CARRY Route Optimizer</string>
+    <key>CFBundleDisplayName</key>
+    <string>CARRY Route Optimizer</string>
+    <key>CFBundleVersion</key>
+    <string>$VERSION</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$VERSION</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.15</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>CARRY Route Optimizer needs Apple Events access for full functionality.</string>
+</dict>
+</plist>
+EOF
+
+        # 강화된 런처 스크립트
+        cat > "$APP_NAME/Contents/MacOS/run_app" << 'EOF'
+#!/bin/bash
+# CARRY Route Optimizer Launcher - Enhanced
+set -e
+
+echo "🚀 Starting CARRY Route Optimizer..."
+
+# 리소스 디렉토리로 이동
+RESOURCES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../Resources" && pwd)"
+cd "$RESOURCES_DIR"
+
+# Python 경로 설정
+export PYTHONPATH="$RESOURCES_DIR:$PYTHONPATH"
+
+# Python 실행 (시스템 Python 우선)
+if command -v python3 >/dev/null 2>&1; then
+    echo "✅ Using system Python3"
+    exec python3 gui_perfect.py "$@"
+elif [[ -x "/usr/bin/python3" ]]; then
+    echo "✅ Using /usr/bin/python3"
+    exec /usr/bin/python3 gui_perfect.py "$@"
+else
+    echo "❌ Python3 not found. Please install Python 3.11+"
+    osascript -e 'display dialog "Python 3.11+ is required to run CARRY Route Optimizer.\n\nPlease install Python from python.org" buttons {"OK"} default button "OK"'
+    exit 1
+fi
+EOF
+
+        chmod +x "$APP_NAME/Contents/MacOS/run_app"
+
+        # 리소스 복사 (최적화됨)
+        echo "📂 Copying resources..."
+        cp gui_perfect.py main.py .env "$APP_NAME/Contents/Resources/"
+        cp -r src "$APP_NAME/Contents/Resources/"
+
+        echo "✅ App bundle created: $(du -sh "$APP_NAME" | cut -f1)"
+
+    - name: 📦 Create PKG Installer (Fast)
+      run: |
+        echo "📦 Creating PKG installer..."
+
+        APP_NAME="CARRY Route Optimizer.app"
+        PKG_NAME="CARRY-Route-Optimizer-$(date +%Y%m%d).pkg"
+
+        # 패키지 구조
+        mkdir -p pkg_payload/Applications
+        cp -R "$APP_NAME" pkg_payload/Applications/
+
+        # PKG 빌드 (빠른 방식)
+        pkgbuild \
+          --root pkg_payload \
+          --identifier com.carry.routeoptimizer.installer \
+          --version 1.0.0 \
+          --install-location / \
+          --quiet \
+          "$PKG_NAME"
+
+        # 검증
+        if [[ -f "$PKG_NAME" ]]; then
+          echo "✅ PKG created successfully!"
+          echo "📁 File: $PKG_NAME"
+          echo "📊 Size: $(du -sh "$PKG_NAME" | cut -f1)"
+
+          # 패키지 검증
+          pkgutil --check-signature "$PKG_NAME" || echo "⚠️ Unsigned package (expected)"
+        else
+          echo "❌ PKG creation failed"
+          exit 1
+        fi
+
+    - name: 🎯 Upload PKG Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CARRY-Route-Optimizer-PKG-${{ github.run_number }}
+        path: "*.pkg"
+        retention-days: 30
+        compression-level: 6  # 빠른 압축
+
+    - name: 🚀 Create Release (if tagged)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "*.pkg"
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: ✅ Build Summary
+      run: |
+        echo "🎉 BUILD COMPLETED SUCCESSFULLY!"
+        echo "=================================="
+        echo "📱 App Bundle: $(ls -d *.app 2>/dev/null | head -1)"
+        echo "📦 PKG File: $(ls *.pkg 2>/dev/null | head -1)"
+        echo "⏱️ Build Time: $(date)"
+        echo "🔗 Download from: Actions > Artifacts"
+        echo ""
+        echo "💡 Installation Instructions:"
+        echo "1. Download the PKG file from Artifacts"
+        echo "2. Double-click to install"
+        echo "3. Find app in Applications folder"
+        echo "4. Right-click app > Open (for first run security)"
+        echo ""
+        echo "📋 Build Info:"
+        echo "- macOS runner: $(sw_vers -productVersion)"
+        echo "- Python: $(python3 --version)"
+        echo "- Build ID: ${{ github.run_number }}"
+
+  # 빌드 실패 시 알림
+  notify-failure:
+    needs: [pre-validate, build-macos]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📢 Build Failed Notification
+      run: |
+        echo "❌ macOS PKG Build Failed"
+        echo "=========================="
+        echo "🔍 Check the following:"
+        echo "1. GitHub Actions quota (2000 min/month for free)"
+        echo "2. macOS runner availability"
+        echo "3. Dependency conflicts"
+        echo "4. Build logs for specific errors"
+        echo ""
+        echo "💡 Alternative solutions:"
+        echo "1. Try building again (runners may be available)"
+        echo "2. Use build-pkg-lite.yml for faster builds"
+        echo "3. Consider GitHub Pro for more macOS minutes"

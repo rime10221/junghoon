@@ -1,6 +1,9 @@
-# 다중 경유지 최적화 동선 프로그램
+# CARRY Route Optimizer 🚛📍
 
-카카오 모빌리티 API를 활용한 배송 경로 최적화 CLI 도구
+카카오 모빌리티 API를 활용한 배송 경로 최적화 시스템
+
+[![macOS PKG Build](https://github.com/rime10221/junghoon/actions/workflows/build-pkg-optimized.yml/badge.svg)](https://github.com/rime10221/junghoon/actions/workflows/build-pkg-optimized.yml)
+[![Cross-Platform Build](https://github.com/rime10221/junghoon/actions/workflows/build-cross-platform.yml/badge.svg)](https://github.com/rime10221/junghoon/actions/workflows/build-cross-platform.yml)
 
 ## ✅ 완성된 시스템
 
@@ -88,6 +91,51 @@ python main.py --input "주문현황.xlsx" --priority RECOMMEND --output "종합
 ```bash
 python main.py --input "주문현황.xlsx" --output "좌표변환.xlsx" --geocode-only
 ```
+
+## 📦 macOS 설치 파일 다운로드
+
+### GitHub Actions 자동 빌드
+
+GitHub Actions를 통해 자동으로 생성되는 macOS PKG 설치 파일을 다운로드할 수 있습니다:
+
+#### 🚀 빠른 다운로드 (권장)
+1. [Actions 탭](https://github.com/rime10221/junghoon/actions) 방문
+2. **"Cross-Platform Build"** 워크플로우 선택 (가장 빠름, 2-3분)
+3. 최신 성공한 빌드 클릭
+4. **Artifacts** 섹션에서 다운로드
+
+#### 📱 완전한 PKG 설치 파일
+1. [Actions 탭](https://github.com/rime10221/junghoon/actions) 방문
+2. **"Build PKG (Lite)"** 또는 **"Build macOS PKG (Optimized)"** 선택
+3. 최신 성공한 빌드의 Artifacts에서 PKG 파일 다운로드
+
+### 설치 방법
+
+#### 방법 1: PKG 설치 파일 (권장)
+```bash
+1. PKG 파일 다운로드
+2. 더블클릭하여 설치 마법사 실행
+3. Applications 폴더에서 "CARRY Route Optimizer" 실행
+```
+
+#### 방법 2: 크로스 플랫폼 패키지
+```bash
+1. ZIP 파일 다운로드 및 압축 해제
+2. 터미널에서 실행: ./install_macos.sh
+3. 또는 수동으로 .app 파일을 Applications 폴더로 이동
+```
+
+### ⚠️ 보안 알림 해결
+macOS에서 "확인되지 않은 개발자" 경고가 나타나면:
+1. **시스템 설정** → **개인정보 보호 및 보안** → **확인 없이 열기**
+2. 또는 앱을 **우클릭** → **열기** → **열기**
+
+### 🔧 GitHub Actions 문제 해결
+macOS runner가 "Queued" 상태로 멈춰있다면 [트러블슈팅 가이드](./GITHUB_ACTIONS_TROUBLESHOOTING.md)를 참고하세요.
+
+---
+
+## 🛠️ 개발자용 설치 (소스 코드)
 
 ### 개별 스크립트 (옵션)
 

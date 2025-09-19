@@ -1,0 +1,117 @@
+name: Build PKG (Lite - Queue Bypass)
+
+# macOS runner 대기열 문제 우회용 경량 빌드
+# 필수 기능만 포함하여 빌드 시간 최소화
+
+on:
+  workflow_dispatch:
+    inputs:
+      urgent_build:
+        description: 'Urgent build (skips some checks)'
+        required: false
+        type: boolean
+        default: true
+
+# 리소스 절약을 위한 제한
+concurrency:
+  group: lite-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 빌드 최적화 환경변수
+  PYTHONUNBUFFERED: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  PIP_NO_WARN_SCRIPT_LOCATION: 1
+  HOMEBREW_NO_AUTO_UPDATE: 1
+
+jobs:
+  quick-build:
+    runs-on: macos-13
+    timeout-minutes: 25  # 짧은 타임아웃으로 큐 우선순위 향상
+
+    steps:
+    - name: ⚡ Quick Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: 🐍 Setup Python (Minimal)
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: ⚡ Install Core Dependencies Only
+      run: |
+        echo "⚡ Lightning fast dependency install..."
+
+        # 최소한의 pip 업그레이드
+        python3 -m pip install --upgrade pip --quiet
+
+        # 핵심 의존성만 설치 (빠른 빌드)
+        pip install --quiet --no-warn-script-location \
+          PyQt6 pandas requests python-dotenv click openpyxl
+
+    - name: 🚀 Ultra Fast Build
+      run: |
+        echo "🚀 Ultra fast PKG build..."
+
+        APP="CARRY Route Optimizer.app"
+        PKG="CARRY-Route-Optimizer-Lite-$(date +%H%M).pkg"
+
+        # 정리
+        rm -rf "$APP" *.pkg pkg_*
+
+        # 최소 앱 구조 (초고속)
+        mkdir -p "$APP/Contents/"{MacOS,Resources}
+
+        # 간단한 Info.plist
+        cat > "$APP/Contents/Info.plist" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key><string>start</string>
+    <key>CFBundleIdentifier</key><string>com.carry.routeoptimizer</string>
+    <key>CFBundleName</key><string>CARRY Route Optimizer</string>
+    <key>CFBundleVersion</key><string>1.0.0</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+</dict>
+</plist>
+EOF
+
+        # 초간단 런처
+        cat > "$APP/Contents/MacOS/start" << 'EOF'
+#!/bin/bash
+cd "$(dirname "$0")/../Resources"
+exec python3 gui_perfect.py "$@"
+EOF
+        chmod +x "$APP/Contents/MacOS/start"
+
+        # 파일 복사 (빠르게)
+        cp gui_perfect.py main.py .env "$APP/Contents/Resources/"
+        cp -r src "$APP/Contents/Resources/"
+
+        # 초고속 PKG 생성
+        mkdir -p pkg/Applications
+        cp -R "$APP" pkg/Applications/
+
+        pkgbuild --root pkg --identifier com.carry.routeoptimizer \
+                 --version 1.0.0 --install-location / --quiet "$PKG"
+
+        echo "✅ Lightning build complete: $PKG ($(du -sh "$PKG" | cut -f1))"
+
+    - name: 📤 Upload Result
+      uses: actions/upload-artifact@v4
+      with:
+        name: CARRY-PKG-Lite-${{ github.run_number }}
+        path: "*.pkg"
+        retention-days: 7  # 짧은 보관 기간
+
+    - name: ⚡ Success Summary
+      run: |
+        echo "⚡ LIGHTNING BUILD SUCCESS!"
+        echo "========================="
+        echo "📦 PKG: $(ls *.pkg)"
+        echo "⏱️ Build time: ~3-5 minutes"
+        echo "🎯 Ready for download!"

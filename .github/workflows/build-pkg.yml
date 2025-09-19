@@ -17,8 +17,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-12  # 구체적 macOS 버전 지정
-    timeout-minutes: 30
+    runs-on: macos-13  # 더 빠른 최신 버전 사용
+    timeout-minutes: 45  # 여유있는 타임아웃
 
     steps:
     - name: 📥 Checkout Repository
@@ -29,25 +29,22 @@ jobs:
     - name: 🐍 Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11.8'  # 구체적 버전 지정
+        python-version: '3.11.8'
         cache: 'pip'
+        cache-dependency-path: 'requirements.txt'
 
-    - name: 📦 Install All Dependencies
+    - name: 📦 Install Dependencies (Cached)
       run: |
         echo "=== System Info ==="
         uname -a
         sw_vers
-        which python3
         python3 --version
 
-        echo "=== Install Dependencies ==="
+        echo "=== Install Dependencies (with caching) ==="
         python3 -m pip install --upgrade pip wheel setuptools
 
-        # requirements.txt의 모든 의존성 설치
-        pip install -r requirements.txt
-
-        # macOS GUI 패키지 추가 설치
-        pip install PyQt6
+        # 의존성을 한번에 설치 (더 빠름)
+        pip install -r requirements.txt PyQt6 --no-warn-script-location
 
     - name: 🔍 Verify Files
       run: |
