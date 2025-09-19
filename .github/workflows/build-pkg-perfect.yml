@@ -85,26 +85,12 @@ jobs:
             pathex=['.', 'src'],  # src 경로 추가
             binaries=[],
             datas=[
-                ('src', 'src'),
-                ('.env', '.'),
-                ('main.py', '.'),
-                ('requirements.txt', '.'),
-                # 추가 루트 디렉토리 Python 파일들
-                ('batch_process.py', '.'),
-                ('check_excel.py', '.'),
-                ('check_excel_basic.py', '.'),
-                ('check_excel_simple.py', '.'),
-                ('check_excel_values.py', '.'),
-                ('geocode_only.py', '.'),
-                ('gui_main.py', '.'),
-                ('gui_pyqt.py', '.'),
-                ('mac_gui.py', '.'),
-                ('main_simple.py', '.'),
-                ('setup_mac.py', '.'),
-                ('test_excel_geocoding.py', '.'),
-                ('test_geocoding.py', '.'),
-                ('test_geocoding_simple.py', '.'),
-                ('test_gui.py', '.'),
+                ('src', 'src'),  # 핵심: gui_perfect.py가 직접 import하는 모든 모듈들
+                ('.env', '.'),   # 핵심: 환경설정 파일
+                # main.py와 batch_process.py는 GUI에서 사용하지 않으므로 제외
+                # 모든 테스트/검증 파일들 (check_*, test_*) 제외
+                # 과거 GUI 버전들 (gui_main.py, gui_pyqt.py, mac_gui.py) 제외
+                # 보조 도구들 (setup_mac.py, main_simple.py, geocode_only.py) 제외
             ],
             hiddenimports=[
                 # GUI 프레임워크 - 완전한 PyQt6 모듈 리스트
