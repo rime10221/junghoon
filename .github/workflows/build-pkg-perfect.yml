@@ -91,18 +91,31 @@ jobs:
                 ('requirements.txt', '.'),
             ],
             hiddenimports=[
+                # GUI 프레임워크
                 'PyQt6.QtCore',
                 'PyQt6.QtWidgets',
                 'PyQt6.QtGui',
+                # 데이터 처리
                 'pandas',
                 'numpy',
                 'sklearn',
-                'requests',
+                # Excel 파일 처리
                 'openpyxl',
+                'xlrd',  # Excel 파일 읽기 (누락되었던 중요 모듈!)
+                # 네트워크 및 API
+                'requests',
+                'urllib3',
+                'certifi',
+                # 지도 및 시각화
                 'folium',
+                'branca',
+                # CLI 및 환경
                 'click',
                 'dotenv',
-                # src 모듈들
+                # 테스트 (런타임에 필요할 수 있음)
+                'pytest',
+                # src 모듈들 (완전한 목록)
+                'src',
                 'src.route_optimizer',
                 'src.excel_handler',
                 'src.geocoder',
@@ -112,6 +125,13 @@ jobs:
                 'src.kakao_api_client',
                 'src.coordinate_utils',
                 'src.map_visualizer',
+                # 추가 의존성들
+                'json',
+                'csv',
+                'datetime',
+                'pathlib',
+                'threading',
+                'multiprocessing',
             ],
             hookspath=[],
             hooksconfig={},
