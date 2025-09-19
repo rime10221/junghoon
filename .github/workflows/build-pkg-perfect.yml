@@ -82,39 +82,86 @@ jobs:
         # 메인 스크립트
         a = Analysis(
             ['gui_perfect.py'],
-            pathex=['.'],
+            pathex=['.', 'src'],  # src 경로 추가
             binaries=[],
             datas=[
                 ('src', 'src'),
                 ('.env', '.'),
                 ('main.py', '.'),
                 ('requirements.txt', '.'),
+                # 추가 루트 디렉토리 Python 파일들
+                ('batch_process.py', '.'),
+                ('check_excel.py', '.'),
+                ('check_excel_basic.py', '.'),
+                ('check_excel_simple.py', '.'),
+                ('check_excel_values.py', '.'),
+                ('geocode_only.py', '.'),
+                ('gui_main.py', '.'),
+                ('gui_pyqt.py', '.'),
+                ('mac_gui.py', '.'),
+                ('main_simple.py', '.'),
+                ('setup_mac.py', '.'),
+                ('test_excel_geocoding.py', '.'),
+                ('test_geocoding.py', '.'),
+                ('test_geocoding_simple.py', '.'),
+                ('test_gui.py', '.'),
             ],
             hiddenimports=[
-                # GUI 프레임워크
+                # GUI 프레임워크 - 완전한 PyQt6 모듈 리스트
                 'PyQt6.QtCore',
                 'PyQt6.QtWidgets',
                 'PyQt6.QtGui',
+                'PyQt6.sip',
+                'PyQt6.QtPrintSupport',
                 # 데이터 처리
                 'pandas',
+                'pandas.io.excel._xlrd',
+                'pandas.io.excel._openpyxl',
+                'pandas.io.parsers.readers',
                 'numpy',
+                'numpy.core._multiarray_umath',
                 'sklearn',
-                # Excel 파일 처리
+                'sklearn.cluster',
+                'sklearn.cluster._kmeans',
+                # Excel 파일 처리 - 완전한 리스트
                 'openpyxl',
+                'openpyxl.workbook',
+                'openpyxl.worksheet',
+                'openpyxl.cell',
                 'xlrd',  # Excel 파일 읽기 (누락되었던 중요 모듈!)
-                # 네트워크 및 API
+                'xlrd.biffh',
+                'xlrd.sheet',
+                'xlrd.book',
+                'xlsxwriter',
+                # 네트워크 및 API - 완전한 requests 의존성
                 'requests',
+                'requests.adapters',
+                'requests.auth',
+                'requests.cookies',
+                'requests.models',
+                'requests.sessions',
                 'urllib3',
+                'urllib3.util',
+                'urllib3.util.retry',
                 'certifi',
+                'chardet',
+                'idna',
                 # 지도 및 시각화
                 'folium',
+                'folium.plugins',
                 'branca',
+                'branca.colormap',
+                'jinja2',
+                'jinja2.ext',
+                'markupsafe',
                 # CLI 및 환경
                 'click',
+                'click.core',
                 'dotenv',
+                'python_dotenv',
                 # 테스트 (런타임에 필요할 수 있음)
                 'pytest',
-                # src 모듈들 (완전한 목록)
+                # src 모듈들 - gui_perfect.py가 직접 import하는 모듈들
                 'src',
                 'src.route_optimizer',
                 'src.excel_handler',
@@ -125,13 +172,35 @@ jobs:
                 'src.kakao_api_client',
                 'src.coordinate_utils',
                 'src.map_visualizer',
-                # 추가 의존성들
+                # gui_perfect.py가 직접 import하는 모듈들 (root 디렉토리 기준)
+                'excel_handler',  # src.excel_handler와 동일하지만 직접 import용
+                'geocoder',       # src.geocoder와 동일하지만 직접 import용
+                'route_optimizer', # src.route_optimizer와 동일하지만 직접 import용
+                'logger_config',   # src.logger_config와 동일하지만 직접 import용
+                # Python 표준 라이브러리 (명시적 포함)
                 'json',
                 'csv',
                 'datetime',
                 'pathlib',
                 'threading',
                 'multiprocessing',
+                'logging',
+                'logging.handlers',
+                'os',
+                'sys',
+                'time',
+                'traceback',
+                'collections',
+                'itertools',
+                'functools',
+                'typing',
+                # 기타 필수 모듈들
+                'pkg_resources',
+                'setuptools',
+                'six',
+                'pytz',
+                'dateutil',
+                'dateutil.parser',
             ],
             hookspath=[],
             hooksconfig={},
